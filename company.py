@@ -4,7 +4,7 @@ import pandas as pd
 st.set_page_config(page_title="회사 결정 도우미", layout="centered")
 
 st.title("🏢 회사 결정 도우미")
-st.markdown("회사 선택을 위한 평가 항목별 점수를 입력하면, 자동으로 점수와 순위를 계산해 드립니다.")
+st.text("회사 선택을 위한 평가 항목별 점수를 입력하면 자동으로 점수와 순위를 계산해 드립니다")
 
 # 1. 사용자 입력: 회사 및 항목 (기본값 포함)
 company_input = st.text_input("✅ 회사명들을 입력하세요 (쉼표로 구분)", "A회사, B회사, C회사")
@@ -14,7 +14,7 @@ companies = [x.strip() for x in company_input.split(",") if x.strip()]
 criteria = [x.strip() for x in criteria_input.split(",") if x.strip()]
 
 if len(companies) >= 2 and len(criteria) >= 2:
-    st.markdown("---")
+    st.text("---")
     st.subheader("📊 평가 항목 우선순위 설정 (1순위가 가장 중요)")
     priority = {}
     used_values = set()
@@ -30,7 +30,7 @@ if len(companies) >= 2 and len(criteria) >= 2:
 
     weights = {k: len(criteria) - v + 1 for k, v in priority.items()}
 
-    st.markdown("---")
+    st.text("---")
     st.subheader("✏️ 회사별 항목 점수 입력 (1~5점)")
     score_data = {}
     for company in companies:
@@ -54,7 +54,7 @@ if len(companies) >= 2 and len(criteria) >= 2:
     result_df["순위"] = result_df["총점"].rank(ascending=False, method='min').astype(int)
     result_df = result_df.sort_values(by="총점", ascending=False).reset_index(drop=True)
 
-    st.markdown("---")
+    st.text("---")
     st.subheader("📈 최종 결과")
     st.dataframe(result_df, use_container_width=True)
 
