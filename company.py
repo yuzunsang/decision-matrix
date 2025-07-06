@@ -1,46 +1,52 @@
+import streamlit as st
 import pandas as pd
 
-def get_company_decision_result():
-    # 1. 회사 및 항목 입력
-    print("회사명을 입력하세요 (쉼표로 구분):")
-    company_names = input().strip().split(",")
-    company_names = [c.strip() for c in company_names]
+st.set_page_config(page_title="회사 결정 도우미", layout="centered")
 
-    print("평가 항목들을 입력하세요 (쉼표로 구분):")
-    criteria = input().strip().split(",")
-    criteria = [c.strip() for c in criteria]
+st.title("🏢 회사 결정 도우미")
+st.markdown("회사 선택을 위한 평가 항목별 점수를 입력하면, 자동으로 점수와 순위를 계산해 드립니다.")
 
-    num_criteria = len(criteria)
+# 1. 사용자 입력: 회사 및 항목 (기본값 포함)
+company_input = st.text_input("✅ 회사명들을 입력하세요 (쉼표로 구분)", "A회사, B회사, C회사")
+criteria_input = st.text_input("✅ 평가 항목들을 입력하세요 (쉼표로 구분)", "연봉, 워라밸, 근무지, 전망, 직무 호감성")
 
-    # 2. 우선순위 입력
-    print("\n각 평가 항목에 대한 우선순위를 입력하세요 (1이 가장 중요, 중복 없이)")
+companies = [x.strip() for x in company_input.split(",") if x.strip()]
+criteria = [x.strip() for x in criteria_input.split(",") if x.strip()]
+
+if len(companies) >= 2 and len(criteria) >= 2:
+    st.markdown("---")
+    st.subheader("📊 평가 항목 우선순위 설정 (1순위가 가장 중요)")
     priority = {}
+    used_values = set()
     for c in criteria:
-        rank = int(input(f"{c} 항목의 우선순위 (1~{num_criteria}): "))
+        # 중복 우선순위 방지
+        rank = st.selectbox(
+            f"{c}의 우선순위",
+            options=[i for i in range(1, len(criteria) + 1) if i not in used_values],
+            key=f"priority_{c}"
+        )
         priority[c] = rank
+        used_values.add(rank)
 
-    # 우선순위를 가중치로 변환 (역순: 1순위 → 최고 가중치)
-    max_score = num_criteria
-    weights = {k: max_score - v + 1 for k, v in priority.items()}
+    weights = {k: len(criteria) - v + 1 for k, v in priority.items()}
 
-    # 3. 회사별 항목 점수 입력
-    print("\n각 회사에 대해 항목별 점수를 1~5 사이로 입력하세요.")
+    st.markdown("---")
+    st.subheader("✏️ 회사별 항목 점수 입력 (1~5점)")
     score_data = {}
-    for company in company_names:
-        print(f"\n{company} 회사:")
-        scores = {}
-        for c in criteria:
-            s = int(input(f"  {c} 점수 (1~5): "))
-            scores[c] = s
-        score_data[company] = scores
+    for company in companies:
+        with st.expander(f"{company} 점수 입력"):
+            scores = {}
+            for c in criteria:
+                scores[c] = st.slider(f"{c} 점수", 1, 5, 3, key=f"{company}_{c}")
+            score_data[company] = scores
 
-    # 4. 점수 계산
-    final_scores = {}
-    for company, scores in score_data.items():
-        total = sum(scores[c] * weights[c] for c in criteria)
-        final_scores[company] = total
+    # 점수 계산
+    final_scores = {
+        company: sum(scores[c] * weights[c] for c in criteria)
+        for company, scores in score_data.items()
+    }
 
-    # 5. 결과 출력
+    # 결과 출력
     result_df = pd.DataFrame([
         {"회사명": name, "총점": score}
         for name, score in final_scores.items()
@@ -48,8 +54,9 @@ def get_company_decision_result():
     result_df["순위"] = result_df["총점"].rank(ascending=False, method='min').astype(int)
     result_df = result_df.sort_values(by="총점", ascending=False).reset_index(drop=True)
 
-    print("\n📊 최종 결과:")
-    print(result_df.to_string(index=False))
+    st.markdown("---")
+    st.subheader("📈 최종 결과")
+    st.dataframe(result_df, use_container_width=True)
 
-# 실행
-get_company_decision_result()
+else:
+    st.warning("⚠️ 회사명과 평가 항목을 최소 2개 이상 입력해주세요.")
