@@ -1,6 +1,10 @@
 import streamlit as st
 import pandas as pd
 
+if st.session_state.get("is_mobile_warning_shown") is None:
+    st.session_state.is_mobile_warning_shown = True
+    st.info("📱 모바일에서 오류가 발생한다면 크롬 또는 최신 브라우저로 열어주세요.")
+
 st.set_page_config(page_title="회사 결정 도우미", layout="centered")
 
 st.title("🏢 회사 결정 도우미")
